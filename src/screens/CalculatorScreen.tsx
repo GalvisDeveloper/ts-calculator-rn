@@ -69,11 +69,6 @@ const CalculatorScreen = () => {
   return (
     <View style={styles.calcCt}>
       <Text style={styles.minimalResult}>{lastNumber}</Text>
-      {/* <View
-      ref={resultViewRef} {...panResponder.panHandlers}
-      >
-        <Text style={styles.result}>{number}</Text>
-      </View> */}
 
       <GestureRecognizer {...swipeConfig}>
         <Text style={styles.result}>{number}</Text>
@@ -99,18 +94,6 @@ const CalculatorScreen = () => {
           </View>
         );
       })}
-      {/* <View style={styles.mainRow}>
-        <ButtonCalc text="a" />
-        <ButtonCalc text="b" />
-        <ButtonCalc text="c" />
-        <ButtonCalc text="d" />
-      </View>
-      <View style={styles.mainRow}>
-        <ButtonCalc text="a" />
-        <ButtonCalc text="b" />
-        <ButtonCalc text="c" />
-        <ButtonCalc text="d" />
-      </View> */}
     </View>
   );
 };
