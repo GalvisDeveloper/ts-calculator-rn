@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Text, View} from 'react-native';
 import GestureRecognizer from 'react-native-swipe-gestures';
 import ButtonCalc from '../components/ButtonCalc';
@@ -15,12 +15,34 @@ const calc = {
 enum ActionTypes {
   AC = 'AC',
   '+/-' = '+/-',
-  // Agrega más acciones aquí según sea necesario
+  '/' = '/',
+  'x' = 'x',
+  '+' = '+',
+  '-' = '-',
+  '=' = '=',
+  '%' = '%',
+}
+
+enum OperatorTypes {
+  '/' = '/',
+  'x' = 'x',
+  '+' = '+',
+  '-' = '-',
+  '=' = '=',
 }
 
 const CalculatorScreen = () => {
   const [number, setNumber] = useState('0');
   const [lastNumber, setLastNumber] = useState('0');
+  const [operator, setOperator] = useState<null | OperatorTypes>(null);
+
+  let TYPOS = {
+    [OperatorTypes['+']]: Number(number) + Number(lastNumber),
+    [OperatorTypes['-']]: Number(lastNumber) - Number(number),
+    [OperatorTypes['x']]: Number(number) * Number(lastNumber),
+    [OperatorTypes['/']]: Number(lastNumber) / Number(number),
+    [OperatorTypes['=']]: 0,
+  };
 
   // Función para eliminar un dígito
   const deleteDigit = () => {
@@ -36,22 +58,29 @@ const CalculatorScreen = () => {
 
   const clean = () => {
     setNumber('0');
+    setLastNumber('0');
+    setOperator(null);
   };
 
   const buildNumber = (numberText: string) => {
-    if (number === '0' && numberText !== '.' && !isNaN(parseInt(numberText))) {
+    let newNumber = number + numberText;
+
+    if (number === '0' && numberText !== '.' && !isNaN(Number(numberText))) {
       setNumber(numberText);
-      // console.log('join')
     } else {
-      let newNumber = number + numberText;
-      // console.log(number);
       if (
         (number.includes('.') && numberText === '.') ||
-        (isNaN(parseInt(numberText)) && !numberText.startsWith('.'))
+        (isNaN(Number(numberText)) && !numberText.startsWith('.'))
       )
         return;
 
-      setNumber(newNumber);
+      if (operator && lastNumber === '0') {
+        setLastNumber(number);
+        setNumber(numberText.startsWith('.') ? '0.' : numberText);
+      } else {
+        //TODO: check escritura desde el igual
+        setNumber(newNumber.substring(0, 10));
+      }
     }
   };
 
@@ -61,14 +90,48 @@ const CalculatorScreen = () => {
     }
   };
 
+  console.log(operator);
+  const operation = (type: OperatorTypes) => {
+    // changePrevNumber();
+
+    if (lastNumber === '0' && operator) return;
+
+    let result = operator ? TYPOS[operator].toString() : TYPOS[type].toString();
+    setOperator(type);
+
+    if (operator) {
+      setLastNumber('0');
+      setOperator(type === '=' ? null : type);
+      setNumber(result);
+    } else {
+      setLastNumber(number.endsWith('.') ? number.slice(0, -1) : number);
+      setNumber('0');
+      setOperator(type);
+    }
+  };
+
+  const percent = () => {
+    if (number !== '0') {
+      setNumber((Number(number) / 100).toString());
+    }
+  };
+
   const ACTIONS_P: Record<ActionTypes, () => void> = {
     [ActionTypes.AC]: () => clean(),
     [ActionTypes['+/-']]: () => positiveNegative(),
+    [ActionTypes['+']]: () => operation(OperatorTypes['+']),
+    [ActionTypes['-']]: () => operation(OperatorTypes['-']),
+    [ActionTypes['/']]: () => operation(OperatorTypes['/']),
+    [ActionTypes['x']]: () => operation(OperatorTypes['x']),
+    [ActionTypes['=']]: () => operation(OperatorTypes['=']),
+    [ActionTypes['%']]: () => percent(),
   };
 
   return (
     <View style={styles.calcCt}>
-      <Text style={styles.minimalResult}>{lastNumber}</Text>
+      {lastNumber !== '0' && (
+        <Text style={styles.minimalResult}>{lastNumber}</Text>
+      )}
 
       <GestureRecognizer {...swipeConfig}>
         <Text style={styles.result}>{number}</Text>
